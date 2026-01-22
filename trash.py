@@ -1,3 +1,4 @@
+from scipy.sparse.linalg import eigsh
 
         self.demands_components_num: Optional[int] = len(list(nx.connected_components(self.demands_graph)))
         self.demands_pinv_sqrt: Optional[np.ndarray] = get_pinv_sqrt(self.demands_laplacian)
