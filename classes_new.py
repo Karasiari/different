@@ -120,8 +120,7 @@ class PositiveTouchedArray:
 @dataclass(slots=True)
 class PreprocessedInstance:
     """Problem instance transformed to edge-indexed structures for fast access."""
-    graph: nx.Graph
-    directed_graph_view: nx.DiGraph
+    graph: nx.MultiDiGraph
     edge_key_by_index: List[EdgeKey]
     capacity_by_edge: List[int]
     slack_by_edge: List[int]
