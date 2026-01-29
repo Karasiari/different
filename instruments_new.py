@@ -4,9 +4,9 @@ from .classes_for_algorithm import *
 # Preprocessing
 # ----------------------------
 
-def build_indexed_graph(edge_inputs: Sequence[EdgeInput]) -> Tuple[nx.Graph, List[EdgeKey], List[int]]:
-    """Build an undirected NetworkX graph and assign a compact index to each edge."""
-    graph = nx.Graph()
+def build_indexed_graph(edge_inputs: Sequence[EdgeInput]) -> Tuple[nx.MultiDiGraph, List[EdgeKey], List[int]]:
+    """Build a directed NetworkX multigraph and assign a compact index to each edge."""
+    graph = nx.MultiDiGraph()
     edge_key_by_index: List[EdgeKey] = []
     capacity_by_edge: List[int] = []
     seen: Dict[EdgeKey, int] = {}
@@ -16,29 +16,17 @@ def build_indexed_graph(edge_inputs: Sequence[EdgeInput]) -> Tuple[nx.Graph, Lis
             raise ValueError(
                 f"Edge capacity must be non-negative, got {edge.capacity} for edge {edge.u}-{edge.v}."
             )
-
-        key = canonical_edge_key(edge.u, edge.v)
-        if key in seen:
-            existing_idx = seen[key]
-            if capacity_by_edge[existing_idx] != edge.capacity:
-                raise ValueError(
-                    f"Duplicate edge {key} with conflicting capacities: "
-                    f"{capacity_by_edge[existing_idx]} vs {edge.capacity}."
-                )
-            continue
-
         idx = len(edge_key_by_index)
-        seen[key] = idx
-        edge_key_by_index.append(key)
+        edge_key_by_index.append(EdgeKey(edge.u, edge.v, edge.key))
         capacity_by_edge.append(edge.capacity)
-        graph.add_edge(edge.u, edge.v, idx=idx, capacity=edge.capacity)
+        graph.add_edge(edge.u, edge.v, edge.key, idx=idx, capacity=edge.capacity)
 
     return graph, edge_key_by_index, capacity_by_edge
 
 
 def process_demands(
     demand_inputs: Sequence[DemandInput],
-    graph: nx.Graph,
+    graph: nx.MultiDiGraph,
     edge_count: int,
 ) -> Tuple[Dict[DemandID, ProcessedDemand], List[int], List[List[DemandID]]]:
     """Validate demand paths, derive edge indices, and compute initial edge loads."""
@@ -57,10 +45,10 @@ def process_demands(
         current_node = demand.source
         edge_indices: List[int] = []
 
-        for step, (u, v) in enumerate(demand.initial_edge_path):
-            if not graph.has_edge(u, v):
+        for step, (u, v, key) in enumerate(demand.initial_edge_path):
+            if not graph.has_edge(u, v, key):
                 raise ValueError(
-                    f"Demand {demand.demand_id} initial_edge_path uses a non-existent edge: {u} - {v}."
+                    f"Demand {demand.demand_id} initial_edge_path uses a non-existent edge: {u} - {v} - {key}."
                 )
 
             if current_node == u:
@@ -73,7 +61,7 @@ def process_demands(
                     f"current node {current_node}, edge endpoints {(u, v)}."
                 )
 
-            edge_idx = graph[u][v]["idx"]
+            edge_idx = graph[u][v][key]["idx"]
             edge_indices.append(edge_idx)
             if demand.volume:
                 initial_load_by_edge[edge_idx] += demand.volume
@@ -124,7 +112,6 @@ def preprocess_instance(input_data: SpareCapacityGreedyInput) -> PreprocessedIns
 
     return PreprocessedInstance(
         graph=graph,
-        directed_graph_view=graph.to_directed(as_view=True),
         edge_key_by_index=edge_key_by_index,
         capacity_by_edge=capacity_by_edge,
         slack_by_edge=slack_by_edge,
