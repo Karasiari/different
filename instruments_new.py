@@ -193,7 +193,7 @@ def make_weight1(
     routed = scenario.routed_by_edge.values
     add = scenario.add_by_edge
 
-    def weight(_u: Node, _v: Node, attrs: Mapping[str, Any]) -> Optional[int]:
+    def weight(_u: Node, _v: Node, _key: int, attrs: Mapping[str, Any]) -> Optional[int]:
         edge_idx = attrs["idx"]
         if edge_idx == failed_edge_idx:
             return None
