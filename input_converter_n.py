@@ -17,7 +17,7 @@ from .classes_for_algorithm import (
 )
 
 
-def _get_edge_capacities(graph: nx.MultiGraph) -> Dict[Tuple[int, int, int], int]:
+def _get_edge_capacities(graph: nx.MultiDiGraph) -> Dict[Tuple[int, int, int], int]:
     """Get edge capacities for a directed version of a graph: 
     for each multiedge exists its doubled (capacity) version with different direction
 
@@ -35,12 +35,9 @@ def _get_edge_capacities(graph: nx.MultiGraph) -> Dict[Tuple[int, int, int], int
 
     for node_u, node_v, key, data in graph.edges(keys=True, data=True):
         edge_key = (node_u, node_v, key)
-        reversed_edge_key = (node_v, node_u, key)
         if edge_key not in capacities:
             capacities[edge_key] = 0
-            capacities[reversed_edge_key] = 0
         capacities[edge_key] += int(data['capacity'])
-        capacities[reversed_edge_key] += int(data['capacity'])
 
     return capacities
 
@@ -103,7 +100,7 @@ def _build_demand_inputs(
 
 
 def convert_to_greedy_input(
-    graph: nx.MultiGraph,
+    graph: nx.MultiDiGraph,
     demands: Dict[int, Tuple[int, int, int]],
     route_result: Dict[int, List[Tuple[int, int, int]]],
     epsilon: float = 1.0,
