@@ -121,7 +121,7 @@ class PositiveTouchedArray:
 class PreprocessedInstance:
     """Problem instance transformed to edge-indexed structures for fast access."""
     graph: nx.MultiDiGraph
-    indexes_by_agg_index: Dict[int, int]
+    indexes_by_agg_index: Dict[int, Tuple[int, ...]]
     edge_key_by_index: List[EdgeKey]
     capacity_by_edge: List[int]
     slack_by_edge: List[int]
