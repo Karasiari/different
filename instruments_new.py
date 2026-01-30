@@ -4,24 +4,34 @@ from .classes_for_algorithm import *
 # Preprocessing
 # ----------------------------
 
-def build_indexed_graph(edge_inputs: Sequence[EdgeInput]) -> Tuple[nx.MultiDiGraph, List[EdgeKey], List[int]]:
-    """Build a directed NetworkX multigraph and assign a compact index to each edge."""
+def build_indexed_graph(edge_inputs: Sequence[EdgeInput]) -> Tuple[nx.MultiDiGraph, Dict[int, List[int, ...]], List[EdgeKey], List[int]]:
+    """Build a directed NetworkX multigraph and assign a compact index to each edge, create mapping agg_index -> index."""
     graph = nx.MultiDiGraph()
+    indexes_by_agg_index: Dict[int, List[int, ...]] = {}
     edge_key_by_index: List[EdgeKey] = []
     capacity_by_edge: List[int] = []
-    seen: Dict[EdgeKey, int] = {}
+    seen: Dict[Tuple[Node, Node], int] = {}
 
+    new_agg_index = 0
     for edge in edge_inputs:
         if edge.capacity < 0:
             raise ValueError(
                 f"Edge capacity must be non-negative, got {edge.capacity} for edge {edge.u}-{edge.v}."
             )
         idx = len(edge_key_by_index)
+        if seen.get([(edge.u, edge.v)], False):
+            agg_index = seen[(edge.u, edge.v)]
+            indexes_by_agg_index[agg_index].append(idx)
+        else:
+            agg_index = new_agg_index
+            seen[(edge.u, edge.v)] = agg_index
+            indexes_by_agg_index[agg_index] = [idx]
+            new_agg_index += 1
         edge_key_by_index.append(EdgeKey(edge.u, edge.v, edge.key))
         capacity_by_edge.append(edge.capacity)
         graph.add_edge(edge.u, edge.v, edge.key, idx=idx, capacity=edge.capacity)
 
-    return graph, edge_key_by_index, capacity_by_edge
+    return graph, indexes_by_agg_index, edge_key_by_index, capacity_by_edge
 
 
 def process_demands(
@@ -92,7 +102,7 @@ def process_demands(
 
 def preprocess_instance(input_data: SpareCapacityGreedyInput) -> PreprocessedInstance:
     """Transform raw input into an indexed instance and validate initial feasibility."""
-    graph, edge_key_by_index, capacity_by_edge = build_indexed_graph(input_data.edges)
+    graph, indexes_by_agg_index, edge_key_by_index, capacity_by_edge = build_indexed_graph(input_data.edges)
     if not edge_key_by_index:
         raise ValueError("Input graph must contain at least one edge.")
 
@@ -112,6 +122,7 @@ def preprocess_instance(input_data: SpareCapacityGreedyInput) -> PreprocessedIns
 
     return PreprocessedInstance(
         graph=graph,
+        indexes_by_agg_index=indexes_by_agg_index,
         edge_key_by_index=edge_key_by_index,
         capacity_by_edge=capacity_by_edge,
         slack_by_edge=slack_by_edge,
