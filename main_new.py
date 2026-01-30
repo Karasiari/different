@@ -24,7 +24,7 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
         - per-failed-edge backup paths for affected demands
     """
     instance = preprocess_instance(input_data)
-    epsilon = input_data.epsilon
+    #epsilon = input_data.epsilon
 
     successfully_rerouted_demands_volume = 0
 
@@ -40,7 +40,7 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
 
     reserve_paths_by_failed_edge: Dict[EdgeKey, Dict[DemandID, EdgePath]] = {}
     algorithm_failure_flag: bool = False
-    remaining_network_by_failed_edge: Dict[EdgeKey, Tuple[nx.Graph, nx.Graph]] = {}
+    #remaining_network_by_failed_edge: Dict[EdgeKey, Tuple[nx.Graph, nx.Graph]] = {}
 
     for failed_edge_idx in failure_edge_indices:
         affected_demands = list(instance.demands_using_edge[failed_edge_idx])
@@ -49,8 +49,8 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
         routed.clear()
         compute_leftover_space(leftover, affected_demands, instance.demands_by_id)
 
-        remaining_network_for_edge = build_remaining_network_for_failed_edge(instance, failed_edge_idx, leftover, affected_demands)
-        remaining_network_by_failed_edge[instance.edge_key_by_index[failed_edge_idx]] = remaining_network_for_edge
+        #remaining_network_for_edge = build_remaining_network_for_failed_edge(instance, failed_edge_idx, leftover, affected_demands)
+        #remaining_network_by_failed_edge[instance.edge_key_by_index[failed_edge_idx]] = remaining_network_for_edge
 
         if not algorithm_failure_flag:
             scenario = FailureScenarioState(
@@ -84,7 +84,7 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
     }
 
     return SpareCapacityGreedyOutput(
-        remaining_network_by_failed_edge=remaining_network_by_failed_edge,
+        #remaining_network_by_failed_edge=remaining_network_by_failed_edge,
         algorithm_failure_flag=algorithm_failure_flag,
         successfully_rerouted_demands_volume=successfully_rerouted_demands_volume,
         additional_volume_by_edge=additional_volume_by_edge,
