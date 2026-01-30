@@ -312,7 +312,7 @@ def apply_backup_routing(
     instance: PreprocessedInstance,
     scenario: FailureScenarioState,
     demand: ProcessedDemand,
-    backup_path_nodes: Sequence[Node],
+    backup_path_edges: Sequence[EdgeKey],
 ) -> None:
     """Apply the chosen backup route: update global add and per-scenario routed volume."""
     if demand.volume == 0 or len(backup_path_nodes) < 2:
@@ -324,8 +324,9 @@ def apply_backup_routing(
     slack = scenario.slack_by_edge
     volume = demand.volume
 
-    for u, v in pairwise(backup_path_nodes):
-        edge_idx = instance.graph[u][v]["idx"]
+    for edge in backup_path_edges:
+        u, v, key = edge
+        edge_idx = instance.graph[u][v][key]["idx"]
 
         # Physical feasibility (defensive check)
         remaining_capacity = slack[edge_idx] + leftover[edge_idx] - routed[edge_idx]
