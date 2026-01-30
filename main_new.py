@@ -58,6 +58,7 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
 
         if not algorithm_failure_flag:
             scenario = FailureScenarioState(
+                failed_agg_edge_index=failed_agg_edge_idx,
                 failed_edges_indices=failed_edges_indices,
                 leftover_by_edge=leftover,
                 routed_by_edge=routed,
