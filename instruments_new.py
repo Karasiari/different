@@ -226,8 +226,8 @@ def find_backup_path_nodes(
     instance: PreprocessedInstance,
     scenario: FailureScenarioState,
     demand: ProcessedDemand,
-) -> List[Node]:
-    """Compute the demand's backup path as a node sequence.
+) -> List[EdgeKey]:
+    """Compute the demand's backup path as an edge sequence.
 
     Lexicographic objectives:
       1) minimize sum(max(0, volume - allowance(edge))) over edges in the path
@@ -266,7 +266,7 @@ def find_backup_path_nodes(
     add = scenario.add_by_edge
     volume = demand.volume
 
-    def weight2(u: Node, v: Node, attrs: Mapping[str, Any]) -> Optional[int]:
+    def weight2(u: Node, v: Node, key: int, attrs: Mapping[str, Any]) -> Optional[int]:
         """Objective-2 weight, restricted to edges on Objective-1 shortest s-t paths."""
         edge_idx = attrs["idx"]
         if edge_idx in failed_edges_indices:
@@ -289,9 +289,18 @@ def find_backup_path_nodes(
         return allowance if allowance < volume else volume
 
     try:
-        return nx.dijkstra_path(
+        nodes_path = nx.dijkstra_path(
             instance.graph, demand.source, demand.target, weight=weight2
         )
+        edges_path = []
+        for u, v in pairwise(nodes_path):
+            multiedges = instance.graph[u][v]
+            min_key = min(
+                multiedges.keys(),
+                key=lambda k: weight2(u, v, k, multiedges[k]) or float('inf')
+            )
+            edges_path.append(EdgeKey(u, v, min_key))
+        return edges_path
     except nx.NetworkXNoPath as exc:
         raise ValueError(
             f"Objective-2 routing failed for demand {demand.demand_id} under failure of agg edge index {scenario.failed_agg_edge_index}."
