@@ -121,6 +121,7 @@ class PositiveTouchedArray:
 class PreprocessedInstance:
     """Problem instance transformed to edge-indexed structures for fast access."""
     graph: nx.MultiDiGraph
+    indexes_by_agg_index: Dict[int, int]
     edge_key_by_index: List[EdgeKey]
     capacity_by_edge: List[int]
     slack_by_edge: List[int]
@@ -131,7 +132,7 @@ class PreprocessedInstance:
 @dataclass(slots=True)
 class FailureScenarioState:
     """Mutable state while processing one failed edge scenario."""
-    failed_edge_index: int
+    failed_edge_agg_index: int
     leftover_by_edge: PositiveTouchedArray
     routed_by_edge: PositiveTouchedArray
     add_by_edge: List[int]      # global, updated across scenarios
