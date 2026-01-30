@@ -19,12 +19,13 @@ def build_indexed_graph(edge_inputs: Sequence[EdgeInput]) -> Tuple[nx.MultiDiGra
                 f"Edge capacity must be non-negative, got {edge.capacity} for edge {edge.u}-{edge.v}."
             )
         idx = len(edge_key_by_index)
-        if seen.get([(edge.u, edge.v)], False):
-            agg_index = seen[(edge.u, edge.v)]
+        u_for_key, v_for_key = min(edge.u, edge.v), max(edge.u, edge.v)
+        if seen.get([(u_for_key, v_for_key)], False):
+            agg_index = seen[(u_for_key, v_for_key)]
             indexes_by_agg_index[agg_index].append(idx)
         else:
             agg_index = new_agg_index
-            seen[(edge.u, edge.v)] = agg_index
+            seen[(u_for_key, v_for_key)] = agg_index
             indexes_by_agg_index[agg_index] = [idx]
             new_agg_index += 1
         edge_key_by_index.append(EdgeKey(edge.u, edge.v, edge.key))
