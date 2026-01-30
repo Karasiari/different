@@ -132,6 +132,7 @@ class PreprocessedInstance:
 @dataclass(slots=True)
 class FailureScenarioState:
     """Mutable state while processing one failed edge scenario."""
+    failed_agg_edge_index: int
     failed_edges_indices: List[int, ...]
     leftover_by_edge: PositiveTouchedArray
     routed_by_edge: PositiveTouchedArray
