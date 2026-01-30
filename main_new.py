@@ -17,7 +17,6 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
 
     Returns:
       A `SpareCapacityGreedyOutput` containing:
-        - per-failed-edge remaining networks
         - algorithm failure flag
         - successfully rerouted demands volume
         - global per-edge reservations `add(e)`
@@ -41,7 +40,6 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
 
     reserve_paths_by_failed_edge: Dict[Tuple[Node, Node], Dict[DemandID, EdgePath]] = {}
     algorithm_failure_flag: bool = False
-    #remaining_network_by_failed_edge: Dict[EdgeKey, Tuple[nx.Graph, nx.Graph]] = {}
 
     for failed_agg_edge_idx in failure_agg_edge_indices:
         failed_edges_indices = instance.indexes_by_agg_index[failed_agg_edge_idx]
@@ -52,9 +50,6 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
 
         routed.clear()
         compute_leftover_space(leftover, affected_demands, instance.demands_by_id)
-
-        #remaining_network_for_edge = build_remaining_network_for_failed_edge(instance, failed_edge_idx, leftover, affected_demands)
-        #remaining_network_by_failed_edge[instance.edge_key_by_index[failed_edge_idx]] = remaining_network_for_edge
 
         if not algorithm_failure_flag:
             scenario = FailureScenarioState(
@@ -91,7 +86,6 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
     }
 
     return SpareCapacityGreedyOutput(
-        #remaining_network_by_failed_edge=remaining_network_by_failed_edge,
         algorithm_failure_flag=algorithm_failure_flag,
         successfully_rerouted_demands_volume=successfully_rerouted_demands_volume,
         additional_volume_by_edge=additional_volume_by_edge,
