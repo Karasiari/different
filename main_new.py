@@ -70,19 +70,20 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
             for demand_id in affected_demands:
                 demand = instance.demands_by_id[demand_id]
                 try:
-                    backup_nodes = find_backup_path_nodes(instance, scenario, demand)
+                    backup_edges = find_backup_path_nodes(instance, scenario, demand)
                 except ValueError:
                     algorithm_failure_flag = True
                     break
                 try:
-                    apply_backup_routing(instance, scenario, demand, backup_nodes)
+                    apply_backup_routing(instance, scenario, demand, backup_edges)
                 except ValueError:
                     algorithm_failure_flag = True
                     break
-                demand_to_backup_path[demand_id] = nodes_to_oriented_edge_path(backup_nodes)
+                demand_to_backup_path[demand_id] = backup_edges
                 successfully_rerouted_demands_volume += demand.volume
 
-            reserve_paths_by_failed_edge[instance.edge_key_by_index[failed_edge_idx]] = demand_to_backup_path
+            failed_edge_key = instance.edge_key_by_index[instance.indexes_by_agg_index[failed_agg_edge_idx][0]]
+            reserve_paths_by_failed_edge[(failed_edge_key[0], failed_edge_key[1])] = demand_to_backup_path
 
     additional_volume_by_edge = {
         instance.edge_key_by_index[edge_idx]: add_by_edge[edge_idx] for edge_idx in range(edge_count)
