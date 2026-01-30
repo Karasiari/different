@@ -8,16 +8,15 @@ import networkx as nx
 DemandID = NewType("DemandID", int)
 EdgeId = NewType("EdgeID", int)
 Node = Hashable
-EdgeKey = Tuple[Node, Node, int]
-OrientedEdge = Tuple[Node, Node, int]
+EdgeKey = Tuple[Node, Node]
+OrientedEdge = Tuple[Node, Node]
 EdgePath = List[OrientedEdge]
 
 @dataclass(frozen=True, slots=True)
 class EdgeInput:
-    """Input edge specification for a directed multigraph."""
+    """Input edge specification for an undirected graph."""
     u: Node
     v: Node
-    key: int
     capacity: int
 
 
@@ -26,7 +25,7 @@ class DemandInput:
     """Input traffic demand with an initial (edge) routing path.
 
     `initial_edge_path` is a sequence of edges describing the demand's initial routing.
-    Each element is a 3-tuple (u, v, key) of endpoints. The orientation does not need to be
+    Each element is a 2-tuple (u, v) of endpoints. The orientation does not need to be
     consistent, but the sequence must be contiguous from `source` to `target`.
     """
     demand_id: DemandID
@@ -49,6 +48,7 @@ class SpareCapacityGreedyInput:
 class SpareCapacityGreedyOutput:
     """Greedy algorithm output.
 
+    - `remaining_network_by_failed_edge[e]` is the remaining network for the scenario with failed edge e
     - `algorithm_failure_flag` is the flag to identify a failure of our algorithm 
        to allocate all demands in all scenarious
     - `successfully_rerouted_demands_volume` is the sum(volume of demand) of successfully rerouted demands
@@ -57,10 +57,27 @@ class SpareCapacityGreedyOutput:
     - `reserve_paths_by_failed_edge[e][demand_id]` is the backup (edge) path used by
       `demand_id` when edge `e` fails.
     """
+    remaining_network_by_failed_edge: Dict[EdgeKey, Tuple[nx.Graph, nx.Graph]]
     algorithm_failure_flag: bool
     successfully_rerouted_demands_volume: float
     additional_volume_by_edge: Dict[EdgeKey, int]
     reserve_paths_by_failed_edge: Dict[EdgeKey, Dict[DemandID, EdgePath]]
+
+
+def canonical_edge_key(u: Node, v: Node) -> EdgeKey:
+    """Return a deterministic key for an undirected edge.
+
+    The key is independent of the (u, v) order and is stable for common
+    primitive node types (ints, strings, tuples, ...).
+    """
+    if u == v:
+        return (u, v)
+
+    def sort_key(x: Node) -> Tuple[str, str]:
+        return (type(x).__name__, repr(x))
+
+    a, b = sorted((u, v), key=sort_key)
+    return (a, b)
 
 
 # ----------------------------
@@ -118,8 +135,8 @@ class PositiveTouchedArray:
 @dataclass(slots=True)
 class PreprocessedInstance:
     """Problem instance transformed to edge-indexed structures for fast access."""
-    graph: nx.MultiDiGraph
-    indexes_by_agg_index: Dict[int, List[int, ...]]
+    graph: nx.Graph
+    directed_graph_view: nx.DiGraph
     edge_key_by_index: List[EdgeKey]
     capacity_by_edge: List[int]
     slack_by_edge: List[int]
@@ -130,8 +147,7 @@ class PreprocessedInstance:
 @dataclass(slots=True)
 class FailureScenarioState:
     """Mutable state while processing one failed edge scenario."""
-    failed_agg_edge_index: int
-    failed_edges_indices: List[int, ...]
+    failed_edge_index: int
     leftover_by_edge: PositiveTouchedArray
     routed_by_edge: PositiveTouchedArray
     add_by_edge: List[int]      # global, updated across scenarios
