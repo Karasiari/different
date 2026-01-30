@@ -44,10 +44,10 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
     #remaining_network_by_failed_edge: Dict[EdgeKey, Tuple[nx.Graph, nx.Graph]] = {}
 
     for failed_agg_edge_idx in failure_agg_edge_indices:
-        failed_edge_indices = instance.indexes_by_agg_index[failed_agg_edge_idx]
+        failed_edges_indices = instance.indexes_by_agg_index[failed_agg_edge_idx]
         affected_demands = []
-        for failed_edge_idx in failed_edge_indices:
-            affected_demands += list(instance.demands_using_edge[failed_edge_idx])
+        for failed_edges_idx in failed_edges_indices:
+            affected_demands += list(instance.demands_using_edge[failed_edges_idx])
         rng.shuffle(affected_demands)
 
         routed.clear()
@@ -58,7 +58,7 @@ def run_greedy_spare_capacity_allocation(input_data: SpareCapacityGreedyInput) -
 
         if not algorithm_failure_flag:
             scenario = FailureScenarioState(
-                failed_agg_edge_index=failed_agg_edge_idx,
+                failed_edges_indices=failed_edges_indices,
                 leftover_by_edge=leftover,
                 routed_by_edge=routed,
                 add_by_edge=add_by_edge,
