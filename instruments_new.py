@@ -254,7 +254,7 @@ def find_backup_path_nodes(
 
     if demand.target not in dist_from_source:
         raise ValueError(
-            f"No feasible backup path for demand {demand.demand_id} under failure of edge index {scenario.failed_edge_index}."
+            f"No feasible backup path for demand {demand.demand_id} under failure of agg edge index {scenario.failed_agg_edge_index}."
         )
 
     shortest_len = dist_from_source[demand.target]
@@ -294,7 +294,7 @@ def find_backup_path_nodes(
         )
     except nx.NetworkXNoPath as exc:
         raise ValueError(
-            f"Objective-2 routing failed for demand {demand.demand_id} under failure of edge index {scenario.failed_edge_index}."
+            f"Objective-2 routing failed for demand {demand.demand_id} under failure of agg edge index {scenario.failed_agg_edge_index}."
         ) from exc
 
 
