@@ -198,7 +198,7 @@ def make_weight1(
     `demand_volume` through f under the current scenario state. If the edge is not
     usable (failed edge or physical capacity violation), returns None to hide the edge.
     """
-    failed_edge_idx = scenario.failed_edge_index
+    failed_edges_indices = scenario.failed_edges_indices
     slack = scenario.slack_by_edge
     leftover = scenario.leftover_by_edge.values
     routed = scenario.routed_by_edge.values
@@ -206,7 +206,7 @@ def make_weight1(
 
     def weight(_u: Node, _v: Node, _key: int, attrs: Mapping[str, Any]) -> Optional[int]:
         edge_idx = attrs["idx"]
-        if edge_idx == failed_edge_idx:
+        if edge_idx in failed_edges_indices:
             return None
 
         # Physical capacity for rerouted demands in this scenario:
@@ -259,7 +259,7 @@ def find_backup_path_nodes(
 
     shortest_len = dist_from_source[demand.target]
 
-    failed_edge_idx = scenario.failed_edge_index
+    failed_edges_indices = scenario.failed_edges_indices
     slack = scenario.slack_by_edge
     leftover = scenario.leftover_by_edge.values
     routed = scenario.routed_by_edge.values
@@ -269,7 +269,7 @@ def find_backup_path_nodes(
     def weight2(u: Node, v: Node, attrs: Mapping[str, Any]) -> Optional[int]:
         """Objective-2 weight, restricted to edges on Objective-1 shortest s-t paths."""
         edge_idx = attrs["idx"]
-        if edge_idx == failed_edge_idx:
+        if edge_idx in failed_edges_indices:
             return None
 
         remaining_capacity = slack[edge_idx] + leftover[edge_idx] - routed[edge_idx]
@@ -290,7 +290,7 @@ def find_backup_path_nodes(
 
     try:
         return nx.dijkstra_path(
-            instance.directed_graph_view, demand.source, demand.target, weight=weight2
+            instance.graph, demand.source, demand.target, weight=weight2
         )
     except nx.NetworkXNoPath as exc:
         raise ValueError(
