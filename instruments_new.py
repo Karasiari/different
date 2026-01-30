@@ -345,8 +345,3 @@ def apply_backup_routing(
                 )
 
         scenario.routed_by_edge.increment(edge_idx, volume)
-
-
-def nodes_to_oriented_edge_path(nodes_path: Sequence[Node]) -> EdgePath:
-    """Convert a node path [n0, n1, ..., nk] into an oriented edge path [(n0,n1),...,(n{k-1},nk)]."""
-    return [(u, v) for u, v in pairwise(nodes_path)]
